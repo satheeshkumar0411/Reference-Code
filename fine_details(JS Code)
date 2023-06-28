@@ -1,0 +1,12 @@
+// Copyright (c) 2023, stanch and contributors
+// For license information, please see license.txt
+
+frappe.ui.form.on('Fine Details', {
+	refresh: function(frm) {
+		frm.add_custom_button('Make Payment', function() {
+				frm.call('payment').then(r =>{
+				})
+			
+        });
+	}
+});
