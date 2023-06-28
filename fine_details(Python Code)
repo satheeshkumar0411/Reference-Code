@@ -1,0 +1,24 @@
+# Copyright (c) 2023, stanch and contributors
+# For license information, please see license.txt
+
+import frappe
+from frappe.model.document import Document
+
+class FineDetails(Document):
+	@frappe.whitelist()
+	def payment(self):
+		if int(self.fine_amount) > 0 :
+			pymt = frappe.new_doc("Payment Entry")
+			pymt.party_type = "Customer"
+			pymt.party = self.student_name
+			pymt.mode_of_payment = "Cash"
+			pymt.received_amount = self.fine_amount
+			pymt.paid_to = "Cash - S"
+			pymt.paid_amount = self.fine_amount
+			pymt.save()
+			frappe.db.commit()
+			if pymt.received_amount == self.fine_amount:
+				self.is_paid = 1
+		self.save()
+		frappe.db.commit()
+		frappe.msgprint("Payment Has Been Done Successfully")
