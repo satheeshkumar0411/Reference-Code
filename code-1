@@ -1,1 +1,99 @@
 Referene-Code
+# Copyright (c) 2023, stanch and contributors
+# For license information, please see license.txt
+
+import frappe
+from frappe.model.document import Document
+import datetime
+from frappe import _
+from frappe.utils.data import add_days, getdate,date_diff
+
+class BooksInLibrary(Document):
+    @frappe.whitelist()
+    def take_book(self):
+        for m in self.link_3:
+            if m.book:
+                orgnl = frappe.db.get_value("Books",{"name":m.book},"quantity") or 0
+                if orgnl < m.quantity:
+                    frappe.throw(_('The avalible quantity of %s is %s , So Kindly take avalible quantity')%(m.book,orgnl))
+                else:
+                    bil= frappe.new_doc("Book Records")
+                    bil.student_name = self.student_name
+                    bil.book_name = m.book
+                    bil.author = m.author
+                    bil.category = m.category
+                    bil.mrp = m.mrp
+                    bil.quantity = m.quantity
+                    bil.days = m.days
+                    bil.date= datetime.date.today()
+                    bil.save()
+                    frappe.db.commit()
+                    after = float(orgnl)-float(m.quantity)
+                    frappe.db.set_value("Books",m.book,"quantity",after)
+        frappe.msgprint("Kindly return the book before the mentioned days, If exceed 5 RS will be added per day")
+
+    @frappe.whitelist()
+    def list_book(self):
+        all = frappe.db.get_all("Book Records",{"student_name":self.student_name},"*")
+        for a in all:
+            self.append('link_3',{
+            'book' : a.book_name,
+            'author' : a.author,
+            'category' : a.category,
+            'mrp' : a.mrp,
+            'quantity' : a.quantity,
+            'days' : a.days
+            })
+
+
+    @frappe.whitelist()
+    def return_book(self):
+        for r in self.link_3:
+            doc_name = frappe.db.get_value("Book Records",{"book_name":r.book,'student_name':self.student_name},"name")
+            bil = frappe.get_doc("Book Records",doc_name)
+            if bil.quantity != 0:
+                if bil.book_name == r.book:
+                    after_rnt = float(bil.quantity)-float(r.quantity)
+                    if (bil.quantity >= float(r.quantity)):
+                        bil.quantity = after_rnt
+                        orgnl = frappe.db.get_value("Books",{"name":r.book},"quantity") or 0
+                        tot_qty = float(orgnl) + float(r.quantity)
+                        frappe.db.set_value("Books",r.book,"quantity",tot_qty)
+
+                        if bil.quantity == 0:
+                            bil.book_returned = 1
+                            bil.save()
+                            frappe.db.commit()
+                    else:
+                        bil.save()
+                        frappe.db.commit()
+                        frappe.throw(_("Please enter valid book quantity"))
+            
+
+            dat = frappe.db.get_value("Book Records",{'student_name':self.student_name},"date")
+            rtn = add_days(dat, int(r.days))
+            if not (datetime.date.today() <= rtn):
+                fne =  frappe.new_doc("Fine Details")
+                date_object = getdate(bil.date)
+                new_date = date_diff(datetime.date.today(),date_object)
+                fine_rate = 5 
+                num_days = new_date
+                fine_amounts = fine_rate * num_days
+                fne.student_name = self.student_name
+                fne.book_name = r.book
+                fne.date = datetime.date.today()
+                fne.sum_of_late_days= new_date
+                fne.fine_amount = fine_amounts
+                if fne.fine_amount == 0:
+                    fne.is_paid = 1
+                    fne.save(ignore_permissions = 1)
+                    frappe.db.commit()
+                else:
+                    fne.save(ignore_permissions = 1)
+                    frappe.db.commit()
+                    frappe.throw(_("Please pay the valid amount"))
+        else:
+            frappe.msgprint("Thanks for returnig the book before the due date get's over.")
+
+
+        
