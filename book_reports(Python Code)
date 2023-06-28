@@ -1,0 +1,119 @@
+# Copyright (c) 2023, stanch and contributors
+# For license information, please see license.txt
+
+import datetime
+import frappe
+import math
+import frappe
+import json
+import requests
+import openpyxl
+from six import BytesIO
+from frappe.utils import (
+    flt,
+    cint,
+    cstr,
+    get_html_format,
+    get_url_to_form,
+    gzip_decompress,
+    format_duration,
+    today
+)
+from datetime import timedelta, datetime
+# from __future__ import unicode_literals
+from six.moves import range
+from six import string_types
+import frappe
+import json
+from frappe.utils import getdate,get_time, cint, add_months, date_diff, add_days, nowdate, get_datetime_str, cstr, get_datetime, now_datetime, format_datetime
+from datetime import datetime
+from calendar import monthrange
+
+from frappe import _, msgprint
+from frappe.utils import flt
+from frappe.utils import cstr, cint, getdate
+# from __future__ import unicode_literals
+from functools import total_ordering
+from itertools import count,groupby
+# import more_itertools
+import frappe
+from frappe import permissions
+from frappe.utils import cstr, cint, getdate, get_last_day, get_first_day, add_days
+from frappe.utils import cstr, add_days, date_diff, getdate, format_date,now
+from math import floor
+from frappe import msgprint, _
+from calendar import month, monthrange
+from datetime import date, timedelta, datetime,time
+from six.moves import range
+from six import string_types
+import frappe
+import json
+from frappe.utils import getdate, cint, add_months, date_diff, add_days, nowdate, get_datetime_str, cstr, get_datetime, now_datetime, format_datetime
+from datetime import datetime
+from calendar import monthrange
+from frappe import _, msgprint
+from frappe.utils import flt
+from frappe.utils import cstr, cint, getdate
+# from __future__ import unicode_literals
+from functools import total_ordering
+from itertools import count
+import frappe
+from frappe import permissions
+from frappe.utils import cstr, cint, getdate, get_last_day, get_first_day, add_days
+from frappe.utils import cstr, add_days, date_diff, getdate, format_date
+from math import floor
+from frappe import msgprint, _
+from calendar import month, monthrange
+from datetime import date, timedelta, datetime,time
+from frappe.utils.data import add_days, getdate,date_diff
+import datetime as dt
+from datetime import datetime
+
+
+def execute(filters=None):
+    columns, data = [], []
+    columns = get_columns(filters)
+    data = get_data(filters)
+    return columns, data
+
+def get_columns(filters):
+    column = [
+    _('Student Name') + ':Data:120',
+    _('Taken Date') + ':Date:150',
+    _('Return Date') + ':Date:150',
+    _('Book Name') + ':Data:180',
+    _('Book Quantity') + ': Int:140',
+    _('Days') + ':Data:90',
+    _('MRP') + ':Currency:110',
+    _('Fine Amount') + ':Currency:120',
+
+    ]
+    return column
+
+def get_data(filters):
+    data = []
+    record = frappe.db.get_all("Book Records",['*'])
+    # frappe.errprint(record)
+    fine = frappe.db.get_all("Fine Details",['*'])
+    for f in fine:
+        for r in record:
+            rcd = frappe.db.get_value("Book Records",{'student_name':r.student_name},['student_name'])
+            TD = frappe.db.get_value("Book Records",{'date':r.date},['date'])
+            # RD = add_days(r.date, int(r.days))
+            if r.book_returned == 1:
+                # modified_date = frappe.db.get_value("Book Records", {'student_name': r.student_name}, 'modified')
+                RD =(r.modified.date())
+            else:
+                RD = "-"
+            BOOK = frappe.db.get_value("Book Records",{'book_name':r.book_name},['book_name'])
+            QTY = frappe.db.get_value("Book Records",{'quantity':r.quantity},['quantity'])
+            DAY = frappe.db.get_value("Book Records",{'days':r.days},['days'])
+            MRP = frappe.db.get_value("Book Records",{'mrp':r.mrp},['mrp'])
+            FNE = frappe.db.get_value("Fine Details",{'student_name':f.student_name,'book_name':f.book_name},['fine_amount'])
+            if f.student_name == r.student_name:
+                FNE = f.fine_amount
+            else:
+                FNE = None
+            row = [r.student_name,r.date,RD,r.book_name,r.quantity,r.days,r.mrp,FNE]
+            data.append(row)
+        return data
