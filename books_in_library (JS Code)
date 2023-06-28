@@ -1,0 +1,27 @@
+books_in_library (JS Code)
+
+// Copyright (c) 2023, stanch and contributors
+// For license information, please see license.txt
+
+frappe.ui.form.on('Books In Library', {
+	take_book(frm) {
+	
+		frm.call('take_book').then(r =>{
+		})
+	
+},
+	student_name(frm){
+		if(frm.doc.select == "Return")
+		frm.call('list_book').then(r =>{
+		})
+	},
+
+	return(frm){
+		frm.call('return_book').then(r =>{
+		})
+	}
+	// refresh: function(frm) {
+
+	// }
+});
+
