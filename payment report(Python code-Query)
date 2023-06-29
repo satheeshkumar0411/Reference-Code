@@ -1,0 +1,102 @@
+# Copyright (c) 2023, stanch and contributors
+# For license information, please see license.txt
+
+import datetime
+import frappe
+import math
+import frappe
+import json
+import requests
+import openpyxl
+from six import BytesIO
+from frappe.utils import (
+    flt,
+    cint,
+    cstr,
+    get_html_format,
+    get_url_to_form,
+    gzip_decompress,
+    format_duration,
+    today
+)
+from datetime import timedelta, datetime
+# from __future__ import unicode_literals
+from six.moves import range
+from six import string_types
+import frappe
+import json
+from frappe.utils import getdate,get_time, cint, add_months, date_diff, add_days, nowdate, get_datetime_str, cstr, get_datetime, now_datetime, format_datetime
+from datetime import datetime
+from calendar import monthrange
+
+from frappe import _, msgprint
+from frappe.utils import flt
+from frappe.utils import cstr, cint, getdate
+# from __future__ import unicode_literals
+from functools import total_ordering
+from itertools import count,groupby
+# import more_itertools
+import frappe
+from frappe import permissions
+from frappe.utils import cstr, cint, getdate, get_last_day, get_first_day, add_days
+from frappe.utils import cstr, add_days, date_diff, getdate, format_date,now
+from math import floor
+from frappe import msgprint, _
+from calendar import month, monthrange
+from datetime import date, timedelta, datetime,time
+from six.moves import range
+from six import string_types
+import frappe
+import json
+from frappe.utils import getdate, cint, add_months, date_diff, add_days, nowdate, get_datetime_str, cstr, get_datetime, now_datetime, format_datetime
+from datetime import datetime
+from calendar import monthrange
+from frappe import _, msgprint
+from frappe.utils import flt
+from frappe.utils import cstr, cint, getdate
+# from __future__ import unicode_literals
+from functools import total_ordering
+from itertools import count
+import frappe
+from frappe import permissions
+from frappe.utils import cstr, cint, getdate, get_last_day, get_first_day, add_days
+from frappe.utils import cstr, add_days, date_diff, getdate, format_date
+from math import floor
+from frappe import msgprint, _
+from calendar import month, monthrange
+from datetime import date, timedelta, datetime,time
+from frappe.utils.data import add_days, getdate,date_diff
+import datetime as dt
+from datetime import datetime
+
+
+
+def execute(filters=None):
+    columns, data = [], []
+    columns = get_columns(filters)
+    data = get_data(filters)
+    return columns, data
+
+def get_columns(filters):
+    column = [
+    _('Customer Name') + ':Data:140',
+    _('Sum Of Amount') + ':Currency:150',
+    # _('Return Date') + ':Date:150',
+    # _('Book Name') + ':Data:180',
+    # _('Book Quantity') + ': Int:140',
+    # _('Days') + ':Data:90',
+    # _('MRP') + ':Currency:110',
+    # _('Fine Amount') + ':Currency:120',
+
+    ]
+    return column
+
+def get_data(filters):
+    data = []
+    received_amount = 0
+    record = frappe.db.get_all("Customer",['*'])
+    for r in record:
+        received_amount = frappe.db.sql("""select sum(paid_amount) as amt from `tabPayment Entry` where party = '%s' """%(r.customer_name),as_dict=1)[0]
+        row = [r.name, received_amount['amt'] or '-']
+        data.append(row)    
+    return data 
